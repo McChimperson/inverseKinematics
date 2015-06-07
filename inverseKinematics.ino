@@ -23,7 +23,7 @@ float angle(float x1, float y1, float x2, float y2) {
   return result;
 }
 
-float XcircleFind(float x1, float y1, float r1, float x2, float y2, float r2, float sign) {
+float* circleFind(float x1, float y1, float r1, float x2, float y2, float r2, float sign) {
 
   float D = distance(x1, y1, x2, y2);
   float xr = (pow(r1, 2) - pow(r2, 2) + pow(D, 2)) / (2 * D);
@@ -34,93 +34,12 @@ float XcircleFind(float x1, float y1, float r1, float x2, float y2, float r2, fl
   float thetaT = thetaD - thetaR;
   float x3 = r1 * cos(thetaT) + x1;
   float y3 = r1 * sin(thetaT) + y1;
-  return x3;
+  
+  static float xy[2] = {x3,y3};
+  return xy;
 }
 
-
-float YcircleFind(float x1, float y1, float r1, float x2, float y2, float r2, float sign) {
-
-  float D = distance(x1, y1, x2, y2);
-  float xr = (pow(r1, 2) - pow(r2, 2) + pow(D, 2)) / (2 * D);
-  float yr = sign * sqrt(pow(r1, 2) - pow(xr, 2));
-  float thetaR = atan2(yr, xr);
-
-  float thetaD = angle(x1, y1, x2, y2);
-  float thetaT = thetaD - thetaR;
-  float x3 = r1 * cos(thetaT) + x1;
-  float y3 = r1 * sin(thetaT) + y1;
-  return y3;
-}
-
-float IKBACKSERVO (float x3 = 0.5, float y3 = -5)
-{
-  x3 += .5; //Makes it act like x=0 at crotch center
-
-  float x1 = 0.0;         //back hip perm location
-  float x2 = 1.0;         //front hip perm location
-  //float x3 = 0.5;    //assigned foot location
-  float x4;                 //back knee solved
-  float x5;                 //front knee solved
-  float x6 = 0.0;         //back servo perm location
-  float x7 = 1.0;         //front servo perm location
-  float x8;                 //rear springtop solved
-  float x9;                 //front springtop solved
-
-  float y1 = 0.0;         //back hip perm location
-  float y2 = 0.0;         //front hip perm location
-  //float y3 = -4;   //assigned foot location
-  float y4;                 //back knee solved
-  float y5;                 //front knee solved
-  float y6 = 1.25;      //back servo perm location
-  float y7 = 1.25;      //front servo perm location
-  float y8;                 //rear springtop solved
-  float y9;                 //front springtop solved
-
-  float r1 = 3.5; //back thigh length
-  float r2 = 3.5; //front thigh length
-  //float r3 = 0; //nothing to assign here
-  float r4 = 4.0; //backcalf length
-  float r5 = 4.0; //frontcalf length
-  float r6 = 1.0; //backcrank length
-  float r7 = 1.0; //frontcrank length
-  float r8 = 4.25; //frontspring length  (kinda fudged)
-  float r9 = 4.25; //backspring length  (kinda fudged)
-  float sign; //determines is top or bottom solution is chosed for circle intersection
-
-
-
-
-  x4 = XcircleFind(x1, y1, r1, x3, y3, r4, 1); //
-  y4 = YcircleFind(x1, y1, r1, x3, y3, r4, 1);
-
-  x5 = XcircleFind(x2, y2, r2, x3, y3, r5, -1);
-  y5 = YcircleFind(x2, y2, r2, x3, y3, r5, -1);
-
-  x8 = XcircleFind(x6, y6, r6, x4, y4, r8, 1);
-  y8 = YcircleFind(x6, y6, r6, x4, y4, r8, 1);
-
-  x9 = XcircleFind(x7, y7, r7, x5, y5, r9, -1);
-  y9 = YcircleFind(x7, y7, r7, x5, y5, r9, -1);
-
-  float thetas1 = angle(x6, y6, x8, y8);
-  float thetas2 = angle(x7, y7, x9, y9);
-
-  float backservoangle = 180 * thetas1 / PI - 45;
-  float frontservoangle = 180 * thetas2 / PI + 45;
-
-  if (backservoangle < 0)
-  {
-    backservoangle += 360;
-  }
-  if (frontservoangle < 0)
-  {
-    frontservoangle += 360;
-  }
-
-  return backservoangle;
-}
-
-float IKFRONTSERVO (float x3 = 0.5, float y3 = -5)
+float* IKSERVOS (float x3 = 0.5, float y3 = -5)
 {
   x3 += .5; //Makes it act like x=0 at crotch center
 
@@ -157,18 +76,26 @@ float IKFRONTSERVO (float x3 = 0.5, float y3 = -5)
 
 
 
+  float* xy4;
+  float* xy5;
+  float* xy8;
+  float* xy9;
+  
+  xy4 = circleFind(x1, y1, r1, x3, y3, r4, 1);
+  x4 = xy4[0]; //
+  y4 = xy4[1];
 
-  x4 = XcircleFind(x1, y1, r1, x3, y3, r4, 1); //
-  y4 = YcircleFind(x1, y1, r1, x3, y3, r4, 1);
+  xy5 = circleFind(x2, y2, r2, x3, y3, r5, -1);
+  x5 = xy5[0];
+  y5 = xy5[1];
+  
+  xy8 = circleFind(x6, y6, r6, x4, y4, r8, 1);
+  x8 = xy8[0];
+  y8 = xy8[1];
 
-  x5 = XcircleFind(x2, y2, r2, x3, y3, r5, -1);
-  y5 = YcircleFind(x2, y2, r2, x3, y3, r5, -1);
-
-  x8 = XcircleFind(x6, y6, r6, x4, y4, r8, 1);
-  y8 = YcircleFind(x6, y6, r6, x4, y4, r8, 1);
-
-  x9 = XcircleFind(x7, y7, r7, x5, y5, r9, -1);
-  y9 = YcircleFind(x7, y7, r7, x5, y5, r9, -1);
+  xy9 = circleFind(x7, y7, r7, x5, y5, r9, -1);
+  x9 = xy9[0];
+  y9 = xy9[1];
 
   float thetas1 = angle(x6, y6, x8, y8);
   float thetas2 = angle(x7, y7, x9, y9);
@@ -185,7 +112,8 @@ float IKFRONTSERVO (float x3 = 0.5, float y3 = -5)
     frontservoangle += 360;
   }
 
-  return frontservoangle;
+  static float servoAngles[2] = {frontservoangle,backservoangle};
+  return servoAngles;
 }
 
 
@@ -204,47 +132,53 @@ void setup() {
 
 void loop() {
 
-  float tstep=0.03
-  ;
+  float tstep=0.002;
   float xamp=2.3; 
   float yoffset=4.5; //coordinate system, y below hip is negative. yoffset is SUBTRACTED from the y coordinate, so it should be a positive number
   float ylift=4; //how much the foot is lifted off the ground. ylift is ADDED to the y coordinate during the liftoff phase
- 
+  float* servoAngles;
  
  //t=0
    for (float t = 0; t < 1; t += tstep)
   {
         //front left
-    servo1.write(IKBACKSERVO(xamp*(-1.0+2.0*t),- yoffset +ylift*t-ylift*t*t));
-    servo2.write(IKFRONTSERVO(xamp*(-1.0+2.0*t),- yoffset +ylift*t-ylift*t*t));
+    servoAngles = IKSERVOS(xamp*(-1.0+2.0*t),- yoffset +ylift*t-ylift*t*t);
+    servo1.write(servoAngles[0]);
+    servo2.write(servoAngles[1]);
         //front right
-    servo3.write(IKFRONTSERVO(xamp*(-1.0+2.0*t),-yoffset));
-    servo4.write(IKBACKSERVO(xamp*(-1.0+2.0*t),- yoffset));
+    servoAngles = IKSERVOS(xamp*(-1.0+2.0*t),-yoffset);
+    servo3.write(servoAngles[0]);
+    servo4.write(servoAngles[1]);
         //back right
-    servo5.write(IKFRONTSERVO(xamp*(-(-1.0+2.0*t)),- yoffset +ylift*t-ylift*t*t));
-    servo6.write(IKBACKSERVO(xamp*(-(-1.0+2.0*t)),- yoffset +ylift*t-ylift*t*t));
+    servoAngles = IKSERVOS(xamp*(-(-1.0+2.0*t)),- yoffset +ylift*t-ylift*t*t);
+    servo5.write(servoAngles[0]);
+    servo6.write(servoAngles[1]);
 
-    //back left
-    servo7.write(IKBACKSERVO(xamp*(1.0-2.0*t),- yoffset));
-    servo8.write(IKFRONTSERVO(xamp*(1.0-2.0*t),- yoffset));
+        //back left
+    servoAngles = IKSERVOS(xamp*(1.0-2.0*t),- yoffset);
+    servo7.write(servoAngles[0]);
+    servo8.write(servoAngles[1]);
 
   }
   
   //t=1
     for (float t = 0; t < 1; t += tstep)
   {
-        
-    servo1.write(IKBACKSERVO(xamp*(1.0-2.0*t),- yoffset));
-    servo2.write(IKFRONTSERVO(xamp*(1.0-2.0*t),- yoffset));
+    servoAngles = IKSERVOS(xamp*(1.0-2.0*t),- yoffset);
+    servo1.write(servoAngles[0]);
+    servo2.write(servoAngles[1]);
     
-    servo3.write(IKFRONTSERVO(xamp*(-(-1.0+2.0*t)),- yoffset +ylift*t-ylift*t*t));
-    servo4.write(IKBACKSERVO(xamp*(-(-1.0+2.0*t)),- yoffset +ylift*t-ylift*t*t));
+    servoAngles = IKSERVOS(xamp*(-(-1.0+2.0*t)),- yoffset +ylift*t-ylift*t*t);
+    servo3.write(servoAngles[0]);
+    servo4.write(servoAngles[1]);
     
-    servo5.write(IKFRONTSERVO(xamp*(-1.0+2.0*t),- yoffset));
-    servo6.write(IKBACKSERVO(xamp*(-1.0+2.0*t),- yoffset));
+    servoAngles = IKSERVOS(xamp*(-1.0+2.0*t),- yoffset);
+    servo5.write(servoAngles[0]);
+    servo6.write(servoAngles[1]);
     
-    servo7.write(IKBACKSERVO(xamp*(-1.0+2.0*t),- yoffset +ylift*t-ylift*t*t));
-    servo8.write(IKFRONTSERVO(xamp*(-1.0+2.0*t),- yoffset +ylift*t-ylift*t*t));
+    servoAngles = IKSERVOS(xamp*(-1.0+2.0*t),- yoffset +ylift*t-ylift*t*t);
+    servo7.write(servoAngles[0]);
+    servo8.write(servoAngles[1]);
 
   }
   //t=2
@@ -343,3 +277,4 @@ void loop() {
     servo8.write(90-45);
 */
 }
+
